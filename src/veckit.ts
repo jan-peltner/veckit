@@ -1,3 +1,65 @@
+export class M23 {
+	/** matrix layout column major
+	 * | a, c, tx |
+	 * | b, d, ty |
+	 */
+	public constructor(
+		public readonly a: number,
+		public readonly b: number,
+		public readonly c: number,
+		public readonly d: number,
+		public readonly tx: number,
+		public readonly ty: number,
+
+	) { }
+
+	public static identity(): M23 {
+		return new M23(1, 0, 0, 1, 0, 0);
+	}
+
+	public static rotation(rad: number): M23 {
+		const c = Math.cos(rad);
+		const s = Math.sin(rad);
+		return new M23(c, s, -s, c, 0, 0)
+	}
+
+	public static scale(v: V2): M23 {
+		return new M23(v.x, 0, 0, v.y, 0, 0);
+	}
+
+	public static translation(v: V2): M23 {
+		return new M23(1, 0, 0, 1, v.x, v.y);
+	}
+
+	public static shear(v: V2): M23 {
+		return new M23(1, v.y, v.x, 1, 0, 0);
+	}
+
+	public mul(m: M23): M23 {
+		return new M23(
+			// linear part
+			this.a * m.a + this.c * m.b,
+			this.b * m.a + this.d * m.b,
+			this.a * m.c + this.c * m.d,
+			this.b * m.c + this.d * m.d,
+			// affine/translation
+			this.a * m.tx + this.c * m.ty + this.tx,
+			this.b * m.tx + this.d * m.ty + this.ty,
+		)
+	}
+
+	public apply(v: V2): V2 {
+		return new V2(
+			this.a * v.x + this.c * v.y + this.tx,
+			this.b * v.x + this.d * v.y + this.ty
+		)
+	}
+
+	public toArray(): Array<number> {
+		return [this.a, this.b, this.c, this.d, this.tx, this.ty];
+	}
+}
+
 export class V2 {
 	public constructor(public readonly x: number, public readonly y: number) { }
 
@@ -49,6 +111,10 @@ export class V2 {
 
 	public distance(v: V2): number {
 		return v.sub(this).len();
+	}
+
+	public toArray(): Array<number> {
+		return [this.x, this.y];
 	}
 
 	public static radToDeg(rad: number): number {
