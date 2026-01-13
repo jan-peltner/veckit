@@ -1,5 +1,4 @@
-import { V2 } from "./lib/v2";
-import { V2R } from "./lib/v2r";
+import { V2, V2R } from "./libs/veckit"
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
