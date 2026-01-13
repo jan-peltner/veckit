@@ -48,13 +48,6 @@ export class M23 {
 		)
 	}
 
-	public apply(v: V2): V2 {
-		return new V2(
-			this.a * v.x + this.c * v.y + this.tx,
-			this.b * v.x + this.d * v.y + this.ty
-		)
-	}
-
 	public toArray(): Array<number> {
 		return [this.a, this.b, this.c, this.d, this.tx, this.ty];
 	}
@@ -111,6 +104,20 @@ export class V2 {
 
 	public distance(v: V2): number {
 		return v.sub(this).len();
+	}
+
+	public transform(m: M23): V2 {
+		return new V2(
+			m.a * this.x + m.c * this.y + m.tx,
+			m.b * this.x + m.d * this.y + m.ty
+		);
+	}
+
+	public transformLinear(m: M23): V2 {
+		return new V2(
+			m.a * this.x + m.c * this.y,
+			m.b * this.x + m.d * this.y
+		);
 	}
 
 	public toArray(): Array<number> {
@@ -301,5 +308,9 @@ export class V2R {
 
 	public scale(s: number): V2R {
 		return new V2R(this.origin, this.dir.scale(s));
+	}
+
+	public transform(m: M23): V2R {
+		return new V2R(this.origin.transform(m), this.dir.transformLinear(m));
 	}
 }
