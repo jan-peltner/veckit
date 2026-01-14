@@ -48,6 +48,14 @@ export class M23 {
 		return new M23(1, 0, 0, 1, v.x, v.y);
 	}
 
+	public static canvasYUp(height: number): M23 {
+		return new M23(1, 0, 0, -1, 0, height);
+	}
+
+	public static canvasYUpCentered(width: number, height: number): M23 {
+		return new M23(1, 0, 0, -1, width / 2, height / 2);
+	}
+
 	// composition
 
 	public mul(m: M23): M23 {
@@ -81,12 +89,8 @@ export class M23 {
 
 	// misc 
 
-	public toArray(): Array<number> {
+	public toCanvasTuple(): [number, number, number, number, number, number,] {
 		return [this.a, this.b, this.c, this.d, this.tx, this.ty];
-	}
-
-	public setCtxTransform(ctx: CanvasRenderingContext2D): void {
-		ctx.transform(this.a, this.b, this.c, this.d, this.tx, this.ty);
 	}
 }
 
