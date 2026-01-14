@@ -1,4 +1,6 @@
 export class M23 {
+	// constructors
+
 	/** matrix layout column major
 	 * | a, c, tx |
 	 * | b, d, ty |
@@ -10,7 +12,6 @@ export class M23 {
 		public readonly d: number,
 		public readonly tx: number,
 		public readonly ty: number,
-
 	) { }
 
 	public static identity(): M23 {
@@ -27,13 +28,27 @@ export class M23 {
 		return new M23(v.x, 0, 0, v.y, 0, 0);
 	}
 
+	public static shearX(s: number): M23 {
+		return new M23(1, 0, s, 1, 0, 0);
+	}
+
+	public static shearY(s: number): M23 {
+		return new M23(1, s, 0, 1, 0, 0);
+	}
+
+	public static reflectX(): M23 {
+		return new M23(1, 0, 0, -1, 0, 0);
+	}
+
+	public static reflectY(): M23 {
+		return new M23(-1, 0, 0, 1, 0, 0);
+	}
+
 	public static translation(v: V2): M23 {
 		return new M23(1, 0, 0, 1, v.x, v.y);
 	}
 
-	public static shear(v: V2): M23 {
-		return new M23(1, v.y, v.x, 1, 0, 0);
-	}
+	// composition
 
 	public mul(m: M23): M23 {
 		return new M23(
@@ -48,8 +63,30 @@ export class M23 {
 		)
 	}
 
+	// application
+
+	public transform(v: V2): V2 {
+		return new V2(
+			this.a * v.x + this.c * v.y + this.tx,
+			this.b * v.x + this.d * v.y + this.ty
+		);
+	}
+
+	public transformLinear(v: V2): V2 {
+		return new V2(
+			this.a * v.x + this.c * v.y,
+			this.b * v.x + this.d * v.y
+		);
+	}
+
+	// misc 
+
 	public toArray(): Array<number> {
 		return [this.a, this.b, this.c, this.d, this.tx, this.ty];
+	}
+
+	public setCtxTransform(ctx: CanvasRenderingContext2D): void {
+		ctx.transform(this.a, this.b, this.c, this.d, this.tx, this.ty);
 	}
 }
 
@@ -62,10 +99,6 @@ export class V2 {
 
 	public sub(v: V2): V2 {
 		return new V2(this.x - v.x, this.y - v.y);
-	}
-
-	public scale(s: number): V2 {
-		return new V2(this.x * s, this.y * s);
 	}
 
 	public lenSqr(): number {
@@ -92,6 +125,10 @@ export class V2 {
 		return Math.atan2(det, dot);
 	}
 
+	public scale(s: number): V2 {
+		return new V2(this.x * s, this.y * s);
+	}
+
 	public rotate(rad: number): V2 {
 		const c = Math.cos(rad);
 		const s = Math.sin(rad);
@@ -104,20 +141,6 @@ export class V2 {
 
 	public distance(v: V2): number {
 		return v.sub(this).len();
-	}
-
-	public transform(m: M23): V2 {
-		return new V2(
-			m.a * this.x + m.c * this.y + m.tx,
-			m.b * this.x + m.d * this.y + m.ty
-		);
-	}
-
-	public transformLinear(m: M23): V2 {
-		return new V2(
-			m.a * this.x + m.c * this.y,
-			m.b * this.x + m.d * this.y
-		);
 	}
 
 	public toArray(): Array<number> {
@@ -311,6 +334,6 @@ export class V2R {
 	}
 
 	public transform(m: M23): V2R {
-		return new V2R(this.origin.transform(m), this.dir.transformLinear(m));
+		return new V2R(m.transform(this.origin), m.transformLinear(this.dir));
 	}
 }
