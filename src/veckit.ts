@@ -97,6 +97,10 @@ export class M23 {
 export class V2 {
 	public constructor(public readonly x: number, public readonly y: number) { }
 
+	public static zero(): V2 {
+		return new V2(0, 0);
+	}
+
 	public add(v: V2): V2 {
 		return new V2(this.x + v.x, this.y + v.y);
 	}
@@ -115,7 +119,7 @@ export class V2 {
 
 	public normalize(): V2 {
 		const len = this.len();
-		if (len === 0) return new V2(0, 0);
+		if (len === 0) return V2.zero();
 		return new V2(this.x / len, this.y / len);
 	}
 
@@ -329,8 +333,21 @@ export class V2R {
 		return new V2R(this.origin.add(offset), this.dir);
 	}
 
-	public rotate(rad: number): V2R {
+	public rotateInPlace(rad: number): V2R {
 		return new V2R(this.origin, this.dir.rotate(rad));
+	}
+
+	public rotateAround(rad: number, pivot: V2): V2R {
+		const rM = M23.rotation(rad);
+
+		const rotOrig = rM.transformLinear(this.origin.sub(pivot)).add(pivot);
+		const rotDir = rM.transformLinear(this.dir);
+
+		return new V2R(rotOrig, rotDir);
+	}
+
+	public rotateAboutOrigin(rad: number): V2R {
+		return this.rotateAround(rad, V2.zero())
 	}
 
 	public scale(s: number): V2R {
