@@ -1,3 +1,16 @@
+export type Origin = "bottomLeft"
+	| "bottomCenter"
+	| "bottomRight"
+	| "topLeft"
+	| "topCenter"
+	| "topRight"
+	| "center";
+
+export type AxisDir = {
+	xRight: boolean
+	yDown: boolean,
+};
+
 export class M23 {
 	// constructors
 
@@ -43,17 +56,47 @@ export class M23 {
 	public static reflectY(): M23 {
 		return new M23(-1, 0, 0, 1, 0, 0);
 	}
-
 	public static translation(v: V2): M23 {
 		return new M23(1, 0, 0, 1, v.x, v.y);
 	}
 
-	public static canvasYUp(height: number): M23 {
-		return new M23(1, 0, 0, -1, 0, height);
-	}
+	public static canvasTransform(ctx: CanvasRenderingContext2D, origin: Origin, axisDir: AxisDir): void {
+		let tx = 0;
+		let ty = 0;
 
-	public static canvasYUpCentered(width: number, height: number): M23 {
-		return new M23(1, 0, 0, -1, width / 2, height / 2);
+		console.log(ctx.canvas.width);
+		console.log(ctx.canvas.height);
+
+		switch (origin) {
+			case "bottomLeft":
+				ty = ctx.canvas.height;
+				break;
+			case "bottomCenter":
+				tx = ctx.canvas.width / 2;
+				ty = ctx.canvas.height;
+				break;
+			case "bottomRight":
+				tx = ctx.canvas.width;
+				ty = ctx.canvas.height;
+				break;
+			case "topLeft":
+				break;
+			case "topCenter":
+				tx = ctx.canvas.width / 2;
+				break;
+			case "topRight":
+				tx = ctx.canvas.width;
+				break;
+			case "center":
+				tx = ctx.canvas.width / 2;
+				ty = ctx.canvas.height / 2;
+				break;
+		}
+
+		const ix = axisDir.xRight ? 1 : -1;
+		const jy = axisDir.yDown ? 1 : -1;
+
+		ctx.setTransform(...new M23(ix, 0, 0, jy, tx, ty).toCanvasTuple());
 	}
 
 	// composition

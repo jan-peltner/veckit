@@ -6,7 +6,7 @@ const ctx = canvas.getContext("2d")!;
 V2R.setCtx(ctx);
 
 // flip the y-axis and center the origin
-ctx.setTransform(...M23.canvasYUpCentered(canvas.clientWidth, canvas.clientHeight).toCanvasTuple());
+M23.canvasTransform(ctx, "center", { xRight: true, yDown: false });
 
 const coordSystem = [
   V2R.fromPoints(V2.zero(), new V2(200, 0)),
