@@ -101,6 +101,17 @@ export class V2 {
 		return new V2(0, 0);
 	}
 
+	public static fromAngle(rad: number): V2 {
+		return new V2(Math.cos(rad), Math.sin(rad));
+	}
+
+	/** Map a noise sample in [-1; 1] to a unit vector */
+	public static fromNoise(n: number): V2 {
+		n = Math.max(-1, Math.min(1, n));
+		const angle = (n + 1) * Math.PI;
+		return V2.fromAngle(angle);
+	}
+
 	public add(v: V2): V2 {
 		return new V2(this.x + v.x, this.y + v.y);
 	}
