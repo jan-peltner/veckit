@@ -11,6 +11,9 @@ export type AxisDir = {
 	yDown: boolean,
 };
 
+/**
+ * Main utility class providing canvas context management and angle conversion helpers.
+ */
 export class Veckit {
 	private static ctx: CanvasRenderingContext2D | null = null;
 
@@ -87,14 +90,15 @@ export class Veckit {
 	}
 }
 
+/**
+ * A 2x3 affine transformation matrix for 2D graphics operations.
+ */
 export class M23 {
-	// constructors
 
 	/** matrix layout column major
 	 * | a, c, tx |
 	 * | b, d, ty |
 	 */
-
 	private static readonly IDENTITY = new M23(1, 0, 0, 1, 0, 0);
 
 	public constructor(
@@ -177,6 +181,9 @@ export class M23 {
 	}
 }
 
+/**
+ * An immutable 2D vector.
+ */
 export class V2 {
 	public constructor(public readonly x: number, public readonly y: number) { }
 
@@ -250,8 +257,10 @@ export class V2 {
 	}
 }
 
+/**
+ * A 2D vector anchored at a specific origin point, with rendering utilities.
+ */
 export class V2R {
-	// constructors
 
 	public constructor(
 		public readonly origin: V2,
