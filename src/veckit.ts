@@ -11,6 +11,82 @@ export type AxisDir = {
 	yDown: boolean,
 };
 
+export class Veckit {
+	private static ctx: CanvasRenderingContext2D | null = null;
+
+	public static Canvas = {
+		setCtx(ctx: CanvasRenderingContext2D): void {
+			Veckit.ctx = ctx;
+		},
+
+		getCtx(): CanvasRenderingContext2D | null {
+			return Veckit.ctx;
+		},
+
+		requireCtx(): CanvasRenderingContext2D {
+			if (!Veckit.ctx) {
+				throw new Error("Canvas context not set. Call Veckit.Canvas.setCtx() first.");
+			}
+			return Veckit.ctx;
+
+		},
+
+		setTransform(origin: Origin, axisDir: AxisDir): M23 {
+			const ctx = Veckit.Canvas.requireCtx();
+			let tx = 0;
+			let ty = 0;
+
+			switch (origin) {
+				case "bottomLeft":
+					ty = ctx.canvas.height;
+					break;
+				case "bottomCenter":
+					tx = ctx.canvas.width / 2;
+					ty = ctx.canvas.height;
+					break;
+				case "bottomRight":
+					tx = ctx.canvas.width;
+					ty = ctx.canvas.height;
+					break;
+				case "topLeft":
+					break;
+				case "topCenter":
+					tx = ctx.canvas.width / 2;
+					break;
+				case "topRight":
+					tx = ctx.canvas.width;
+					break;
+				case "center":
+					tx = ctx.canvas.width / 2;
+					ty = ctx.canvas.height / 2;
+					break;
+			}
+
+			const ix = axisDir.xRight ? 1 : -1;
+			const jy = axisDir.yDown ? 1 : -1;
+
+			const m = new M23(ix, 0, 0, jy, tx, ty);
+			ctx.setTransform(...m.toCanvasTuple());
+			return m;
+		},
+
+		resetTransform(): void {
+			const ctx = Veckit.Canvas.requireCtx();
+			ctx.setTransform(...M23.identity().toCanvasTuple());
+		}
+	}
+
+	public static Angle = {
+		radToDeg(rad: number): number {
+			return rad * (180 / Math.PI);
+		},
+
+		degToRad(deg: number): number {
+			return deg * (Math.PI / 180);
+		}
+	}
+}
+
 export class M23 {
 	// constructors
 
@@ -18,6 +94,9 @@ export class M23 {
 	 * | a, c, tx |
 	 * | b, d, ty |
 	 */
+
+	private static readonly IDENTITY = new M23(1, 0, 0, 1, 0, 0);
+
 	public constructor(
 		public readonly a: number,
 		public readonly b: number,
@@ -28,7 +107,7 @@ export class M23 {
 	) { }
 
 	public static identity(): M23 {
-		return new M23(1, 0, 0, 1, 0, 0);
+		return M23.IDENTITY;
 	}
 
 	public static rotation(rad: number): M23 {
@@ -58,45 +137,6 @@ export class M23 {
 	}
 	public static translation(v: V2): M23 {
 		return new M23(1, 0, 0, 1, v.x, v.y);
-	}
-
-	public static canvasTransform(ctx: CanvasRenderingContext2D, origin: Origin, axisDir: AxisDir): void {
-		let tx = 0;
-		let ty = 0;
-
-		console.log(ctx.canvas.width);
-		console.log(ctx.canvas.height);
-
-		switch (origin) {
-			case "bottomLeft":
-				ty = ctx.canvas.height;
-				break;
-			case "bottomCenter":
-				tx = ctx.canvas.width / 2;
-				ty = ctx.canvas.height;
-				break;
-			case "bottomRight":
-				tx = ctx.canvas.width;
-				ty = ctx.canvas.height;
-				break;
-			case "topLeft":
-				break;
-			case "topCenter":
-				tx = ctx.canvas.width / 2;
-				break;
-			case "topRight":
-				tx = ctx.canvas.width;
-				break;
-			case "center":
-				tx = ctx.canvas.width / 2;
-				ty = ctx.canvas.height / 2;
-				break;
-		}
-
-		const ix = axisDir.xRight ? 1 : -1;
-		const jy = axisDir.yDown ? 1 : -1;
-
-		ctx.setTransform(...new M23(ix, 0, 0, jy, tx, ty).toCanvasTuple());
 	}
 
 	// composition
@@ -208,37 +248,9 @@ export class V2 {
 	public toArray(): Array<number> {
 		return [this.x, this.y];
 	}
-
-	public static radToDeg(rad: number): number {
-		return rad * (180 / Math.PI);
-	}
-
-	public static degToRad(deg: number): number {
-		return deg * (Math.PI / 180);
-	}
 }
 
 export class V2R {
-
-	// canvas ctx
-
-	private static ctx: CanvasRenderingContext2D | null = null;
-
-	public static setCtx(ctx: CanvasRenderingContext2D): void {
-		V2R.ctx = ctx;
-	}
-
-	public static getCtx(): CanvasRenderingContext2D | null {
-		return V2R.ctx;
-	}
-
-	private requireCtx(): CanvasRenderingContext2D {
-		if (!V2R.ctx) {
-			throw new Error("Canvas context not set. Call V2R.setCtx() first.");
-		}
-		return V2R.ctx;
-	}
-
 	// constructors
 
 	public constructor(
@@ -262,7 +274,7 @@ export class V2R {
 	// rendering
 
 	public drawLine(style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = this.requireCtx();
+		const ctx = Veckit.Canvas.requireCtx();
 		const end = this.head;
 
 		ctx.save();
@@ -279,7 +291,7 @@ export class V2R {
 	}
 
 	public drawArrow(style?: string | CanvasGradient | CanvasPattern, lineWidth?: number, headSize: number = 10): this {
-		const ctx = this.requireCtx();
+		const ctx = Veckit.Canvas.requireCtx();
 		const end = this.head;
 
 		ctx.save();
@@ -311,7 +323,7 @@ export class V2R {
 	}
 
 	public drawPoint(radius: number = 4, style?: string | CanvasGradient | CanvasPattern): this {
-		const ctx = this.requireCtx();
+		const ctx = Veckit.Canvas.requireCtx();
 
 		ctx.save();
 		if (style) ctx.fillStyle = style;
@@ -325,7 +337,7 @@ export class V2R {
 	}
 
 	public drawCircle(radius: number, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = this.requireCtx();
+		const ctx = Veckit.Canvas.requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
@@ -340,7 +352,7 @@ export class V2R {
 	}
 
 	public drawX(length: number = 8, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = this.requireCtx();
+		const ctx = Veckit.Canvas.requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
@@ -361,7 +373,7 @@ export class V2R {
 	}
 
 	public drawPlus(length: number = 8, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = this.requireCtx();
+		const ctx = Veckit.Canvas.requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;

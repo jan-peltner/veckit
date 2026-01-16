@@ -1,12 +1,12 @@
-import { M23, V2, V2R } from "./libs/veckit.ts"
+import { Veckit, M23, V2, V2R } from "./libs/veckit.ts"
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 
-V2R.setCtx(ctx);
+Veckit.Canvas.setCtx(ctx);
 
 // flip the y-axis and center the origin
-M23.canvasTransform(ctx, "center", { xRight: true, yDown: false });
+Veckit.Canvas.setTransform("center", { xRight: true, yDown: false })
 
 const coordSystem = [
   V2R.fromPoints(V2.zero(), new V2(200, 0)),
