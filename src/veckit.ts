@@ -26,7 +26,7 @@ export class Veckit {
 			return Veckit.ctx;
 		},
 
-		requireCtx(): CanvasRenderingContext2D {
+		_requireCtx(): CanvasRenderingContext2D {
 			if (!Veckit.ctx) {
 				throw new Error("Canvas context not set. Call Veckit.Canvas.setCtx() first.");
 			}
@@ -35,7 +35,7 @@ export class Veckit {
 		},
 
 		setTransform(origin: Origin, axisDir: AxisDir): M23 {
-			const ctx = Veckit.Canvas.requireCtx();
+			const ctx = Veckit.Canvas._requireCtx();
 			let tx = 0;
 			let ty = 0;
 
@@ -74,7 +74,7 @@ export class Veckit {
 		},
 
 		resetTransform(): void {
-			const ctx = Veckit.Canvas.requireCtx();
+			const ctx = Veckit.Canvas._requireCtx();
 			ctx.setTransform(...M23.identity().toCanvasTuple());
 		}
 	}
@@ -91,7 +91,7 @@ export class Veckit {
 }
 
 /**
- * A 2x3 affine transformation matrix for 2D graphics operations.
+ * An immutable 2x3 affine transformation matrix for 2D graphics operations.
  */
 export class M23 {
 
@@ -139,8 +139,13 @@ export class M23 {
 	public static reflectY(): M23 {
 		return new M23(-1, 0, 0, 1, 0, 0);
 	}
+
 	public static translation(v: V2): M23 {
 		return new M23(1, 0, 0, 1, v.x, v.y);
+	}
+
+	public determinant(): number {
+		return this.a * this.d - this.b * this.c;
 	}
 
 	// composition
@@ -258,7 +263,7 @@ export class V2 {
 }
 
 /**
- * A 2D vector anchored at a specific origin point, with rendering utilities.
+ * An immutable, renderable 2D vector anchored at a specific origin point.
  */
 export class V2R {
 
@@ -283,7 +288,7 @@ export class V2R {
 	// rendering
 
 	public drawLine(style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas.requireCtx();
+		const ctx = Veckit.Canvas._requireCtx();
 		const end = this.head;
 
 		ctx.save();
@@ -300,7 +305,7 @@ export class V2R {
 	}
 
 	public drawArrow(style?: string | CanvasGradient | CanvasPattern, lineWidth?: number, headSize: number = 10): this {
-		const ctx = Veckit.Canvas.requireCtx();
+		const ctx = Veckit.Canvas._requireCtx();
 		const end = this.head;
 
 		ctx.save();
@@ -332,7 +337,7 @@ export class V2R {
 	}
 
 	public drawPoint(radius: number = 4, style?: string | CanvasGradient | CanvasPattern): this {
-		const ctx = Veckit.Canvas.requireCtx();
+		const ctx = Veckit.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.fillStyle = style;
@@ -346,7 +351,7 @@ export class V2R {
 	}
 
 	public drawCircle(radius: number, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas.requireCtx();
+		const ctx = Veckit.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
@@ -361,7 +366,7 @@ export class V2R {
 	}
 
 	public drawX(length: number = 8, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas.requireCtx();
+		const ctx = Veckit.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
@@ -382,7 +387,7 @@ export class V2R {
 	}
 
 	public drawPlus(length: number = 8, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas.requireCtx();
+		const ctx = Veckit.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
