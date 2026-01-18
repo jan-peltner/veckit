@@ -1,4 +1,4 @@
-export type Origin = "bottomLeft"
+export type CanvasOrigin = "bottomLeft"
 	| "bottomCenter"
 	| "bottomRight"
 	| "topLeft"
@@ -6,36 +6,40 @@ export type Origin = "bottomLeft"
 	| "topRight"
 	| "center";
 
-export type AxisDir = {
+export type CanvasAxisDir = {
 	xRight: boolean
 	yDown: boolean,
 };
 
+export type EasingFn = (t: number) => number;
+
 /**
- * Main utility class providing canvas context management and angle conversion helpers.
+ * Main utility class providing canvas context management and math helpers.
  */
-export class Veckit {
+export class Vectre {
 	private static ctx: CanvasRenderingContext2D | null = null;
+
+	private static readonly EPSILON = 1e-12;
 
 	public static Canvas = {
 		setCtx(ctx: CanvasRenderingContext2D): void {
-			Veckit.ctx = ctx;
+			Vectre.ctx = ctx;
 		},
 
 		getCtx(): CanvasRenderingContext2D | null {
-			return Veckit.ctx;
+			return Vectre.ctx;
 		},
 
 		_requireCtx(): CanvasRenderingContext2D {
-			if (!Veckit.ctx) {
+			if (!Vectre.ctx) {
 				throw new Error("Canvas context not set. Call Veckit.Canvas.setCtx() first.");
 			}
-			return Veckit.ctx;
+			return Vectre.ctx;
 
 		},
 
-		setTransform(origin: Origin, axisDir: AxisDir): M23 {
-			const ctx = Veckit.Canvas._requireCtx();
+		setTransform(origin: CanvasOrigin, axisDir: CanvasAxisDir): M23 {
+			const ctx = Vectre.Canvas._requireCtx();
 			let tx = 0;
 			let ty = 0;
 
@@ -74,18 +78,31 @@ export class Veckit {
 		},
 
 		resetTransform(): void {
-			const ctx = Veckit.Canvas._requireCtx();
-			ctx.setTransform(...M23.identity().toCanvasTuple());
+			const ctx = Vectre.Canvas._requireCtx();
+			ctx.resetTransform();
 		}
 	}
 
-	public static Angle = {
+	public static Math = {
 		radToDeg(rad: number): number {
 			return rad * (180 / Math.PI);
 		},
 
 		degToRad(deg: number): number {
 			return deg * (Math.PI / 180);
+		},
+
+		epsilon(): number {
+			return Vectre.EPSILON;
+		},
+
+		lerp(start: number, end: number, t: number, easingFn?: EasingFn): number {
+			if (easingFn) t = easingFn(t);
+
+			if (t < 0) return start;
+			if (t > 1) return end;
+
+			return start * (1 - t) + end * t;
 		}
 	}
 }
@@ -146,6 +163,26 @@ export class M23 {
 
 	public determinant(): number {
 		return this.a * this.d - this.b * this.c;
+	}
+
+	public inverse(): M23 | null {
+		const det = this.determinant();
+
+		// matrix is non-inversable if determinant is zero / near zero
+		if (Math.abs(det) <= Vectre.Math.epsilon()) return null;
+
+		const invDet = 1 / det;
+
+		const ia = this.d * invDet;
+		const ib = -this.b * invDet;
+		const ic = -this.c * invDet;
+		const id = this.a * invDet;
+
+		// inverse translation vector: t^-1 = -(A^-1 * t)
+		const itx = -(ia * this.tx + ic * this.ty);
+		const ity = -(ib * this.tx + id * this.ty);
+
+		return new M23(ia, ib, ic, id, itx, ity);
 	}
 
 	// composition
@@ -223,9 +260,20 @@ export class V2 {
 		return Math.sqrt(this.lenSqr());
 	}
 
+	public distSqr(v: V2): number {
+		const dx = v.x - this.x;
+		const dy = v.y - this.y;
+
+		return dx * dx + dy * dy;
+	}
+
+	public dist(v: V2): number {
+		return Math.sqrt(this.distSqr(v));
+	}
+
 	public normalize(): V2 {
 		const len = this.len();
-		if (len === 0) return V2.zero();
+		if (len <= Vectre.Math.epsilon()) return V2.zero();
 		return new V2(this.x / len, this.y / len);
 	}
 
@@ -253,8 +301,20 @@ export class V2 {
 		return new V2(-this.y, this.x);
 	}
 
-	public distance(v: V2): number {
-		return v.sub(this).len();
+	public lerp(v: V2, t: number, easingFn?: EasingFn): V2 {
+		t = easingFn ? easingFn(t) : t;
+
+		return new V2(
+			Vectre.Math.lerp(this.x, v.x, t),
+			Vectre.Math.lerp(this.y, v.y, t),
+		);
+	}
+
+	public project(onto: V2): V2 {
+		const denom = onto.lenSqr();
+		if (denom <= Vectre.Math.epsilon()) return V2.zero();
+
+		return onto.scale(this.dot(onto) / denom);
 	}
 
 	public toArray(): Array<number> {
@@ -288,7 +348,7 @@ export class V2R {
 	// rendering
 
 	public drawLine(style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas._requireCtx();
+		const ctx = Vectre.Canvas._requireCtx();
 		const end = this.head;
 
 		ctx.save();
@@ -305,7 +365,7 @@ export class V2R {
 	}
 
 	public drawArrow(style?: string | CanvasGradient | CanvasPattern, lineWidth?: number, headSize: number = 10): this {
-		const ctx = Veckit.Canvas._requireCtx();
+		const ctx = Vectre.Canvas._requireCtx();
 		const end = this.head;
 
 		ctx.save();
@@ -337,7 +397,7 @@ export class V2R {
 	}
 
 	public drawPoint(radius: number = 4, style?: string | CanvasGradient | CanvasPattern): this {
-		const ctx = Veckit.Canvas._requireCtx();
+		const ctx = Vectre.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.fillStyle = style;
@@ -351,7 +411,7 @@ export class V2R {
 	}
 
 	public drawCircle(radius: number, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas._requireCtx();
+		const ctx = Vectre.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
@@ -366,7 +426,7 @@ export class V2R {
 	}
 
 	public drawX(length: number = 8, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas._requireCtx();
+		const ctx = Vectre.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
@@ -387,7 +447,7 @@ export class V2R {
 	}
 
 	public drawPlus(length: number = 8, style?: string | CanvasGradient | CanvasPattern, lineWidth?: number): this {
-		const ctx = Veckit.Canvas._requireCtx();
+		const ctx = Vectre.Canvas._requireCtx();
 
 		ctx.save();
 		if (style) ctx.strokeStyle = style;
